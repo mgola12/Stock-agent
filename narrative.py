@@ -73,15 +73,52 @@ COMPOSITE SCORE: {score_result['final_score']}/10
 Sub-scores: {score_result['sub_scores']}
 {peer_summary}
 
-Write:
-1. BULL CASE (2-3 concise bullet points, grounded only in the data above)
-2. BEAR CASE (2-3 concise bullet points, grounded only in the data above)
-3. ONE-LINE VERDICT (a single plain-English sentence, no recommendation to buy/sell,
-   just a summary characterization)
+Respond in EXACTLY this format, with these literal section markers (used for
+parsing, so do not add markdown headers or change the marker text):
 
-Keep the whole response under 200 words. This is for research/education only,
-not investment advice — do not phrase anything as a recommendation to buy or sell."""
+BULL:
+- point 1
+- point 2
+- point 3 (optional)
+
+BEAR:
+- point 1
+- point 2
+- point 3 (optional)
+
+VERDICT:
+One plain-English sentence. No recommendation to buy/sell, just a summary characterization.
+
+Keep it under 200 words total. Ground every point only in the data given above —
+do not invent figures. This is for research/education only, not investment advice."""
     return prompt
+
+
+def _parse_sections(text: str) -> dict:
+    """Split Gemini's delimited response into bull/bear/verdict parts for styled rendering."""
+    sections = {"bull": [], "bear": [], "verdict": ""}
+    current = None
+    for line in text.splitlines():
+        stripped = line.strip()
+        upper = stripped.upper()
+        if upper.startswith("BULL"):
+            current = "bull"
+            continue
+        elif upper.startswith("BEAR"):
+            current = "bear"
+            continue
+        elif upper.startswith("VERDICT"):
+            current = "verdict"
+            continue
+        if not stripped:
+            continue
+        if current in ("bull", "bear"):
+            cleaned = stripped.lstrip("-•").strip()
+            if cleaned:
+                sections[current].append(cleaned)
+        elif current == "verdict":
+            sections["verdict"] += (" " + stripped if sections["verdict"] else stripped)
+    return sections
 
 
 def generate_narrative(fundamentals: dict, red_flags: list, score_result: dict, peer_df=None) -> dict:
@@ -95,6 +132,7 @@ def generate_narrative(fundamentals: dict, red_flags: list, score_result: dict, 
         return {
             "success": False,
             "text": None,
+            "sections": None,
             "error": "Gemini API key not configured. If running locally, set GEMINI_API_KEY. If deployed, set it in the app's Secrets panel.",
         }
 
@@ -105,11 +143,12 @@ def generate_narrative(fundamentals: dict, red_flags: list, score_result: dict, 
             model=MODEL_NAME,
             contents=prompt,
         )
-        return {"success": True, "text": response.text, "error": None}
+        parsed = _parse_sections(response.text)
+        return {"success": True, "text": response.text, "sections": parsed, "error": None}
     except Exception as e:
         err_str = str(e)
         if "429" in err_str or "RESOURCE_EXHAUSTED" in err_str:
             friendly = "Gemini free-tier rate limit hit — wait a minute and try again."
         else:
             friendly = f"Gemini API error: {err_str}"
-        return {"success": False, "text": None, "error": friendly}
+        return {"success": False, "text": None, "sections": None, "error": friendly}

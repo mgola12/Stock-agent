@@ -141,3 +141,25 @@ def get_peer_comparison(tickers: list) -> pd.DataFrame:
         except Exception as e:
             rows.append({"Ticker": tk, "Name": f"Error: {e}"})
     return pd.DataFrame(rows)
+
+
+def get_peer_normalized_returns(tickers: list, period: str = "6mo") -> pd.DataFrame:
+    """
+    Fetch price history for each ticker and normalize to % return from the
+    start of the period, so multiple stocks can be overlaid on one chart
+    regardless of their absolute price level (mirrors the reel's peer overlay).
+    """
+    series = {}
+    for tk in tickers:
+        try:
+            hist = get_price_history(tk, period=period)
+            if hist.empty:
+                continue
+            closes = hist["Close"]
+            normalized = (closes / closes.iloc[0] - 1) * 100
+            series[tk] = normalized
+        except Exception:
+            continue
+    if not series:
+        return pd.DataFrame()
+    return pd.DataFrame(series)

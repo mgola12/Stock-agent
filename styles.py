@@ -42,11 +42,59 @@ def inject_css():
             background:
                 repeating-linear-gradient(0deg, rgba(45,212,191,0.035) 0px, rgba(45,212,191,0.035) 1px, transparent 1px, transparent 40px),
                 repeating-linear-gradient(90deg, rgba(45,212,191,0.035) 0px, rgba(45,212,191,0.035) 1px, transparent 1px, transparent 40px),
+                radial-gradient(ellipse at 50% -10%, rgba(45,212,191,0.06), transparent 60%),
                 {BG};
         }}
         .block-container {{
             padding-top: 1.6rem !important;
         }}
+
+        /* ---------- Glow utilities ---------- */
+        .glow-teal {{ text-shadow: 0 0 12px rgba(45,212,191,0.65), 0 0 2px rgba(45,212,191,0.9); }}
+        .glow-green {{ text-shadow: 0 0 12px rgba(74,222,128,0.65), 0 0 2px rgba(74,222,128,0.9); }}
+        .glow-red {{ text-shadow: 0 0 12px rgba(248,113,113,0.65), 0 0 2px rgba(248,113,113,0.9); }}
+        .glow-amber {{ text-shadow: 0 0 12px rgba(245,166,35,0.65), 0 0 2px rgba(245,166,35,0.9); }}
+
+        .panel-glow {{
+            box-shadow: 0 0 0 1px {BORDER}, 0 4px 24px rgba(0,0,0,0.4);
+        }}
+
+        /* ---------- Pill badges (status) ---------- */
+        .pill {{
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 3px 12px;
+            border-radius: 999px;
+            font-weight: 700;
+            font-size: 0.68rem;
+            letter-spacing: 0.08em;
+            min-width: 52px;
+        }}
+        .pill.pass {{ background: rgba(74,222,128,0.14); color: {GREEN}; border: 1px solid rgba(74,222,128,0.35); }}
+        .pill.fail {{ background: rgba(248,113,113,0.14); color: {RED}; border: 1px solid rgba(248,113,113,0.35); }}
+        .pill.flag {{ background: rgba(251,191,36,0.14); color: {YELLOW}; border: 1px solid rgba(251,191,36,0.35); }}
+        .pill.na   {{ background: rgba(107,118,132,0.14); color: {MUTED}; border: 1px solid rgba(107,118,132,0.35); }}
+
+        /* ---------- Pill segmented control (st.radio as tabs) ---------- */
+        div[role="radiogroup"] {{
+            gap: 4px !important;
+        }}
+        div[role="radiogroup"] label {{
+            background: {PANEL} !important;
+            border: 1px solid {BORDER} !important;
+            border-radius: 999px !important;
+            padding: 4px 14px !important;
+            font-size: 0.72rem !important;
+            transition: all 0.15s ease;
+        }}
+        div[role="radiogroup"] label:has(input:checked) {{
+            background: rgba(45,212,191,0.14) !important;
+            border-color: {TEAL} !important;
+            color: {TEAL} !important;
+        }}
+        div[role="radiogroup"] input {{ display: none !important; }}
+        div[role="radiogroup"] label div:first-child {{ display: none !important; }}
 
         /* ---------- Sidebar ---------- */
         section[data-testid="stSidebar"] {{
@@ -122,6 +170,11 @@ def inject_css():
             font-weight: 700 !important;
         }}
 
+        /* ---------- Chart glow ---------- */
+        .js-plotly-plot {{
+            filter: drop-shadow(0 0 10px rgba(45,212,191,0.12));
+        }}
+
         /* ---------- Dataframes ---------- */
         [data-testid="stDataFrame"] {{
             border: 1px solid {BORDER};
@@ -162,27 +215,32 @@ def inject_css():
             display: flex;
             align-items: center;
             gap: 10px;
-            margin: 28px 0 12px 0;
-            padding-bottom: 8px;
-            border-bottom: 1px solid {BORDER};
+            margin: 30px 0 14px 0;
         }}
-        .term-header .arrow {{
-            color: {TEAL};
-            font-size: 0.9rem;
-            text-shadow: 0 0 8px rgba(45,212,191,0.6);
+        .term-header .dot {{
+            width: 8px; height: 8px; border-radius: 50%;
+            background: {TEAL};
+            box-shadow: 0 0 8px {TEAL}, 0 0 2px {TEAL};
+            flex-shrink: 0;
         }}
         .term-header .label {{
             color: {TEXT};
-            font-size: 0.95rem;
+            font-size: 0.92rem;
             font-weight: 700;
-            letter-spacing: 0.08em;
+            letter-spacing: 0.1em;
             text-transform: uppercase;
+            white-space: nowrap;
+        }}
+        .term-header .fade-line {{
+            flex-grow: 1;
+            height: 1px;
+            background: linear-gradient(90deg, {BORDER} 0%, transparent 100%);
         }}
         .term-header .tag {{
-            margin-left: auto;
             color: {MUTED};
-            font-size: 0.7rem;
+            font-size: 0.68rem;
             letter-spacing: 0.05em;
+            white-space: nowrap;
         }}
 
         /* Ticker banner */
@@ -193,11 +251,18 @@ def inject_css():
             border-radius: 4px;
             padding: 18px 22px;
             margin-bottom: 16px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.4);
         }}
         .ticker-name {{
             color: {TEXT};
             font-size: 1.4rem;
             font-weight: 700;
+        }}
+        .ticker-price {{
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: {TEAL};
+            text-shadow: 0 0 12px rgba(45,212,191,0.65), 0 0 2px rgba(45,212,191,0.9);
         }}
         .ticker-sub {{
             color: {MUTED};
@@ -213,18 +278,10 @@ def inject_css():
             align-items: center;
             gap: 14px;
             background: {PANEL};
-            border-left: 3px solid var(--flag-color, {MUTED});
-            border-radius: 3px;
+            border: 1px solid {BORDER};
+            border-radius: 4px;
             padding: 10px 16px;
             margin-bottom: 6px;
-        }}
-        .flag-status {{
-            font-weight: 700;
-            font-size: 0.72rem;
-            letter-spacing: 0.08em;
-            width: 52px;
-            flex-shrink: 0;
-            color: var(--flag-color, {MUTED});
         }}
         .flag-rule {{
             color: {TEXT};
@@ -335,8 +392,9 @@ def sidebar_note(label: str, body: str):
 def section_header(label: str, tag: str = ""):
     st.markdown(f"""
     <div class="term-header">
-        <span class="arrow">▸</span>
+        <span class="dot"></span>
         <span class="label">{label}</span>
+        <span class="fade-line"></span>
         <span class="tag">{tag}</span>
     </div>
     """, unsafe_allow_html=True)
@@ -347,8 +405,11 @@ def ticker_banner(fundamentals: dict):
     price_str = f"₹{price:,.2f}" if price else "N/A"
     st.markdown(f"""
     <div class="ticker-banner">
-        <div class="ticker-name">{fundamentals.get('name', '—')} <span style="color:{MUTED}; font-weight:400; font-size:1rem;">({fundamentals.get('ticker','')})</span></div>
-        <div class="ticker-sub">{fundamentals.get('sector','Unknown')} · {fundamentals.get('industry','')} · {price_str}</div>
+        <div style="display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:10px;">
+            <div class="ticker-name">{fundamentals.get('name', '—')} <span style="color:{MUTED}; font-weight:400; font-size:1rem;">({fundamentals.get('ticker','')})</span></div>
+            <div class="ticker-price">{price_str}</div>
+        </div>
+        <div class="ticker-sub">{fundamentals.get('sector','Unknown')} · {fundamentals.get('industry','')}</div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -356,10 +417,11 @@ def ticker_banner(fundamentals: dict):
 def render_flag_rows(red_flags: list):
     rows_html = ""
     for f in red_flags:
-        color = STATUS_COLORS.get(f["status"], MUTED)
+        status = f["status"]
+        pill_class = {"PASS": "pass", "FAIL": "fail", "FLAG": "flag", "N/A": "na"}.get(status, "na")
         rows_html += f"""
-        <div class="flag-row" style="--flag-color:{color}">
-            <span class="flag-status">{f['status']}</span>
+        <div class="flag-row">
+            <span class="pill {pill_class}">{status}</span>
             <span class="flag-rule">{f['rule']}</span>
             <span class="flag-detail">{f['detail']}</span>
         </div>

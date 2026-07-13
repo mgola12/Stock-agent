@@ -48,7 +48,7 @@ st.markdown(f"""
 with st.sidebar:
     st.markdown(f"<span style='color:{S.TEAL}; font-weight:700; letter-spacing:0.08em;'>▸ SEARCH</span>", unsafe_allow_html=True)
     ticker_input = st.text_input("NSE Symbol (e.g. RELIANCE, TCS, ADANIPOWER)", value="RELIANCE")
-    period = st.selectbox("Price history range", ["1mo", "6mo", "1y", "3y", "5y"], index=2)
+    period = st.radio("Price history range", ["1mo", "6mo", "1y", "3y", "5y"], index=2, horizontal=True)
     manual_peers = st.text_input("Peer tickers (comma-separated, optional)", value="")
     run_button = st.button("ANALYZE", type="primary", use_container_width=True)
 
@@ -102,10 +102,14 @@ fig.add_trace(go.Candlestick(
 ))
 if len(hist) >= 50:
     hist["50DMA"] = hist["Close"].rolling(50).mean()
-    fig.add_trace(go.Scatter(x=hist.index, y=hist["50DMA"], name="50 DMA", line=dict(color=S.AMBER, width=1.4)))
+    fig.add_trace(go.Scatter(x=hist.index, y=hist["50DMA"], name="50 DMA halo",
+                              line=dict(color=S.AMBER, width=6), opacity=0.15, showlegend=False, hoverinfo="skip"))
+    fig.add_trace(go.Scatter(x=hist.index, y=hist["50DMA"], name="50 DMA", line=dict(color=S.AMBER, width=1.6)))
 if len(hist) >= 200:
     hist["200DMA"] = hist["Close"].rolling(200).mean()
-    fig.add_trace(go.Scatter(x=hist.index, y=hist["200DMA"], name="200 DMA", line=dict(color=S.TEAL, width=1.4)))
+    fig.add_trace(go.Scatter(x=hist.index, y=hist["200DMA"], name="200 DMA halo",
+                              line=dict(color=S.TEAL, width=6), opacity=0.15, showlegend=False, hoverinfo="skip"))
+    fig.add_trace(go.Scatter(x=hist.index, y=hist["200DMA"], name="200 DMA", line=dict(color=S.TEAL, width=1.6)))
 fig.update_layout(
     height=440, xaxis_rangeslider_visible=False, margin=dict(l=10, r=10, t=10, b=10),
     paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor=S.PANEL,
@@ -141,10 +145,16 @@ if peer_list:
         perf_fig = go.Figure()
         palette = [S.TEAL, S.AMBER, S.GREEN, S.RED, S.YELLOW]
         for i, col in enumerate(returns_df.columns):
+            line_color = palette[i % len(palette)]
+            is_main = col == norm_ticker
+            perf_fig.add_trace(go.Scatter(
+                x=returns_df.index, y=returns_df[col], name=f"{col} halo",
+                line=dict(width=7, color=line_color), opacity=0.12,
+                showlegend=False, hoverinfo="skip",
+            ))
             perf_fig.add_trace(go.Scatter(
                 x=returns_df.index, y=returns_df[col], name=col,
-                line=dict(width=2.2 if col == norm_ticker else 1.3,
-                          color=palette[i % len(palette)]),
+                line=dict(width=2.4 if is_main else 1.4, color=line_color),
             ))
         perf_fig.update_layout(
             height=320, margin=dict(l=10, r=10, t=10, b=10),

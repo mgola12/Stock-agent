@@ -31,10 +31,8 @@ STATUS_COLORS = {
 def inject_css():
     st.markdown(f"""
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&display=swap');
-
         html, body, [class*="css"], .stMarkdown, .stText, p, span, div, label {{
-            font-family: 'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace !important;
+            font-family: ui-monospace, 'SF Mono', 'Cascadia Code', Menlo, Consolas, monospace !important;
         }}
 
         /* ---------- Base app + grid backdrop ---------- */
@@ -76,26 +74,6 @@ def inject_css():
         .pill.flag {{ background: rgba(251,191,36,0.14); color: {YELLOW}; border: 1px solid rgba(251,191,36,0.35); }}
         .pill.na   {{ background: rgba(107,118,132,0.14); color: {MUTED}; border: 1px solid rgba(107,118,132,0.35); }}
 
-        /* ---------- Pill segmented control (st.radio as tabs) ---------- */
-        div[role="radiogroup"] {{
-            gap: 4px !important;
-        }}
-        div[role="radiogroup"] label {{
-            background: {PANEL} !important;
-            border: 1px solid {BORDER} !important;
-            border-radius: 999px !important;
-            padding: 4px 14px !important;
-            font-size: 0.72rem !important;
-            transition: all 0.15s ease;
-        }}
-        div[role="radiogroup"] label:has(input:checked) {{
-            background: rgba(45,212,191,0.14) !important;
-            border-color: {TEAL} !important;
-            color: {TEAL} !important;
-        }}
-        div[role="radiogroup"] input {{ display: none !important; }}
-        div[role="radiogroup"] label div:first-child {{ display: none !important; }}
-
         /* ---------- Sidebar ---------- */
         section[data-testid="stSidebar"] {{
             background: {PANEL};
@@ -122,7 +100,7 @@ def inject_css():
             box-shadow: 0 0 0 1px {TEAL} !important;
         }}
         [data-baseweb="popover"] {{
-            font-family: 'JetBrains Mono', monospace !important;
+            font-family: ui-monospace, monospace !important;
         }}
         ul[data-testid="stSelectboxVirtualDropdown"] {{
             background: {PANEL} !important;
@@ -130,15 +108,22 @@ def inject_css():
 
         /* ---------- Buttons ---------- */
         .stButton button, button[kind="primary"], button[kind="secondary"] {{
-            background: {BG} !important;
-            border: 1px solid {TEAL} !important;
-            color: {TEAL} !important;
             border-radius: 3px !important;
             font-weight: 700 !important;
             letter-spacing: 0.08em !important;
             text-transform: uppercase !important;
             font-size: 0.78rem !important;
             transition: all 0.15s ease;
+        }}
+        button[kind="secondary"] {{
+            background: {BG} !important;
+            border: 1px solid {BORDER} !important;
+            color: {MUTED} !important;
+        }}
+        button[kind="primary"] {{
+            background: rgba(45,212,191,0.14) !important;
+            border: 1px solid {TEAL} !important;
+            color: {TEAL} !important;
         }}
         .stButton button:hover {{
             background: {TEAL} !important;
@@ -403,13 +388,17 @@ def section_header(label: str, tag: str = ""):
 def ticker_banner(fundamentals: dict):
     price = fundamentals.get("current_price")
     price_str = f"₹{price:,.2f}" if price else "N/A"
+    sector = fundamentals.get("sector")
+    industry = fundamentals.get("industry")
+    sub_parts = [s for s in [sector, industry] if s and s != "Unknown"]
+    sub_line = " · ".join(sub_parts) if sub_parts else "Sector data not available for this instrument"
     st.markdown(f"""
     <div class="ticker-banner">
         <div style="display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:10px;">
             <div class="ticker-name">{fundamentals.get('name', '—')} <span style="color:{MUTED}; font-weight:400; font-size:1rem;">({fundamentals.get('ticker','')})</span></div>
             <div class="ticker-price">{price_str}</div>
         </div>
-        <div class="ticker-sub">{fundamentals.get('sector','Unknown')} · {fundamentals.get('industry','')}</div>
+        <div class="ticker-sub">{sub_line}</div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -441,7 +430,7 @@ def score_gauge(score: float, title: str = "ANALYSIS SCORE"):
     fig = go.Figure(go.Indicator(
         mode="gauge+number",
         value=score,
-        number={"suffix": " / 10", "font": {"size": 40, "color": TEXT, "family": "JetBrains Mono"}},
+        number={"suffix": " / 10", "font": {"size": 40, "color": TEXT, "family": "ui-monospace, Menlo, Consolas, monospace"}},
         gauge={
             "axis": {"range": [0, 10], "tickcolor": MUTED, "tickfont": {"color": MUTED, "size": 10}},
             "bar": {"color": arc_color, "thickness": 0.28},
@@ -484,8 +473,8 @@ def factor_bars(sub_scores: dict, weights: dict):
         margin=dict(l=10, r=60, t=10, b=10),
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
-        xaxis=dict(range=[0, 10], showgrid=False, visible=False),
+        xaxis=dict(range=[0, 13], showgrid=False, visible=False),
         yaxis=dict(color=TEXT, autorange="reversed"),
-        font=dict(color=TEXT, family="JetBrains Mono", size=12),
+        font=dict(color=TEXT, family="ui-monospace, Menlo, Consolas, monospace", size=12),
     )
     return fig

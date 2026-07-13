@@ -48,7 +48,23 @@ st.markdown(f"""
 with st.sidebar:
     st.markdown(f"<span style='color:{S.TEAL}; font-weight:700; letter-spacing:0.08em;'>▸ SEARCH</span>", unsafe_allow_html=True)
     ticker_input = st.text_input("NSE Symbol (e.g. RELIANCE, TCS, ADANIPOWER)", value="RELIANCE")
-    period = st.radio("Price history range", ["1mo", "6mo", "1y", "3y", "5y"], index=2, horizontal=True)
+    st.markdown(f"<span style='color:{S.MUTED}; font-size:0.72rem; letter-spacing:0.06em; text-transform:uppercase;'>Price history range</span>", unsafe_allow_html=True)
+    if "period" not in st.session_state:
+        st.session_state["period"] = "1y"
+
+    def _set_period(p):
+        st.session_state["period"] = p
+
+    period_cols = st.columns(5)
+    for col, p in zip(period_cols, ["1mo", "6mo", "1y", "3y", "5y"]):
+        is_selected = st.session_state["period"] == p
+        col.button(
+            p.upper(), key=f"period_{p}",
+            type="primary" if is_selected else "secondary",
+            use_container_width=True,
+            on_click=_set_period, args=(p,),
+        )
+    period = st.session_state["period"]
     manual_peers = st.text_input("Peer tickers (comma-separated, optional)", value="")
     run_button = st.button("ANALYZE", type="primary", use_container_width=True)
 
@@ -113,7 +129,7 @@ if len(hist) >= 200:
 fig.update_layout(
     height=440, xaxis_rangeslider_visible=False, margin=dict(l=10, r=10, t=10, b=10),
     paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor=S.PANEL,
-    font=dict(color=S.TEXT, family="JetBrains Mono", size=11),
+    font=dict(color=S.TEXT, family="ui-monospace, Menlo, Consolas, monospace", size=11),
     legend=dict(orientation="h", y=1.05, bgcolor="rgba(0,0,0,0)"),
     xaxis=dict(gridcolor=S.BORDER), yaxis=dict(gridcolor=S.BORDER),
 )
@@ -159,7 +175,7 @@ if peer_list:
         perf_fig.update_layout(
             height=320, margin=dict(l=10, r=10, t=10, b=10),
             paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor=S.PANEL,
-            font=dict(color=S.TEXT, family="JetBrains Mono", size=11),
+            font=dict(color=S.TEXT, family="ui-monospace, Menlo, Consolas, monospace", size=11),
             yaxis=dict(title="% return", gridcolor=S.BORDER, ticksuffix="%"),
             xaxis=dict(gridcolor=S.BORDER),
             legend=dict(orientation="h", y=1.08, bgcolor="rgba(0,0,0,0)"),
@@ -263,7 +279,7 @@ log_analysis(
 )
 
 # ---------------- History / backtest tab ----------------
-with st.expander("📜 Analysis History (for this ticker)"):
+with st.expander("Analysis History (for this ticker)"):
     hist_df = load_history(norm_ticker)
     if not hist_df.empty:
         st.dataframe(hist_df, use_container_width=True, hide_index=True)

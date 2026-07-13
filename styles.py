@@ -31,14 +31,130 @@ STATUS_COLORS = {
 def inject_css():
     st.markdown(f"""
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&display=swap');
 
-        html, body, [class*="css"] {{
+        html, body, [class*="css"], .stMarkdown, .stText, p, span, div, label {{
             font-family: 'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace !important;
         }}
 
+        /* ---------- Base app + grid backdrop ---------- */
         .stApp {{
-            background: {BG};
+            background:
+                repeating-linear-gradient(0deg, rgba(45,212,191,0.035) 0px, rgba(45,212,191,0.035) 1px, transparent 1px, transparent 40px),
+                repeating-linear-gradient(90deg, rgba(45,212,191,0.035) 0px, rgba(45,212,191,0.035) 1px, transparent 1px, transparent 40px),
+                {BG};
+        }}
+        .block-container {{
+            padding-top: 1.6rem !important;
+        }}
+
+        /* ---------- Sidebar ---------- */
+        section[data-testid="stSidebar"] {{
+            background: {PANEL};
+            border-right: 1px solid {BORDER};
+        }}
+        section[data-testid="stSidebar"] label {{
+            color: {MUTED} !important;
+            font-size: 0.72rem !important;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+        }}
+
+        /* ---------- Text inputs & selectboxes ---------- */
+        [data-testid="stTextInput"] input,
+        [data-testid="stSelectbox"] div[data-baseweb="select"] > div {{
+            background: {BG} !important;
+            border: 1px solid {BORDER} !important;
+            color: {TEXT} !important;
+            border-radius: 3px !important;
+        }}
+        [data-testid="stTextInput"] input:focus,
+        [data-testid="stSelectbox"] div[data-baseweb="select"]:focus-within > div {{
+            border-color: {TEAL} !important;
+            box-shadow: 0 0 0 1px {TEAL} !important;
+        }}
+        [data-baseweb="popover"] {{
+            font-family: 'JetBrains Mono', monospace !important;
+        }}
+        ul[data-testid="stSelectboxVirtualDropdown"] {{
+            background: {PANEL} !important;
+        }}
+
+        /* ---------- Buttons ---------- */
+        .stButton button, button[kind="primary"], button[kind="secondary"] {{
+            background: {BG} !important;
+            border: 1px solid {TEAL} !important;
+            color: {TEAL} !important;
+            border-radius: 3px !important;
+            font-weight: 700 !important;
+            letter-spacing: 0.08em !important;
+            text-transform: uppercase !important;
+            font-size: 0.78rem !important;
+            transition: all 0.15s ease;
+        }}
+        .stButton button:hover {{
+            background: {TEAL} !important;
+            color: {BG} !important;
+            box-shadow: 0 0 16px rgba(45,212,191,0.5);
+        }}
+        .stButton button:disabled {{
+            border-color: {BORDER} !important;
+            color: {MUTED} !important;
+            background: {PANEL} !important;
+        }}
+
+        /* ---------- Metrics ---------- */
+        [data-testid="stMetric"] {{
+            background: {PANEL};
+            border: 1px solid {BORDER};
+            border-radius: 4px;
+            padding: 12px 16px;
+        }}
+        [data-testid="stMetricLabel"] {{
+            color: {MUTED} !important;
+            font-size: 0.68rem !important;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }}
+        [data-testid="stMetricValue"] {{
+            color: {TEAL} !important;
+            font-size: 1.3rem !important;
+            font-weight: 700 !important;
+        }}
+
+        /* ---------- Dataframes ---------- */
+        [data-testid="stDataFrame"] {{
+            border: 1px solid {BORDER};
+            border-radius: 4px;
+        }}
+
+        /* ---------- Expander ---------- */
+        [data-testid="stExpander"] {{
+            background: {PANEL};
+            border: 1px solid {BORDER} !important;
+            border-radius: 4px;
+        }}
+        [data-testid="stExpander"] summary {{
+            color: {TEXT} !important;
+            font-size: 0.82rem;
+        }}
+
+        /* ---------- Native alerts (fallback styling if used) ---------- */
+        [data-testid="stAlertContainer"], [data-testid="stAlert"], .stAlert {{
+            background: {PANEL} !important;
+            border-radius: 4px !important;
+            font-size: 0.85rem !important;
+        }}
+
+        /* ---------- Custom alert boxes (used instead of st.success/info/error) ---------- */
+        .term-alert {{
+            border-radius: 4px;
+            padding: 12px 18px;
+            font-size: 0.85rem;
+            margin: 6px 0 14px 0;
+            border-left: 3px solid var(--alert-color, {MUTED});
+            background: {PANEL};
+            color: {TEXT};
         }}
 
         /* Terminal-style section header */
@@ -53,6 +169,7 @@ def inject_css():
         .term-header .arrow {{
             color: {TEAL};
             font-size: 0.9rem;
+            text-shadow: 0 0 8px rgba(45,212,191,0.6);
         }}
         .term-header .label {{
             color: {TEXT};
@@ -72,9 +189,10 @@ def inject_css():
         .ticker-banner {{
             background: {PANEL};
             border: 1px solid {BORDER};
+            border-left: 3px solid {TEAL};
             border-radius: 4px;
             padding: 18px 22px;
-            margin-bottom: 8px;
+            margin-bottom: 16px;
         }}
         .ticker-name {{
             color: {TEXT};
@@ -169,12 +287,48 @@ def inject_css():
             margin-top: 2px;
         }}
 
-        /* Dataframe tweaks */
-        [data-testid="stDataFrame"] {{
+        /* Sidebar source note */
+        .sidebar-note {{
             border: 1px solid {BORDER};
             border-radius: 4px;
+            padding: 10px 12px;
+            margin-top: 10px;
+        }}
+        .sidebar-note .lbl {{
+            color: {TEAL};
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            display: block;
+            margin-bottom: 4px;
+        }}
+        .sidebar-note .body {{
+            color: {MUTED};
+            font-size: 0.7rem;
+            line-height: 1.5;
         }}
     </style>
+    """, unsafe_allow_html=True)
+
+
+def styled_alert(message: str, kind: str = "info"):
+    """Custom-rendered alert box (replaces st.success/info/warning/error) so the
+    look stays consistent with the terminal theme instead of Streamlit's defaults."""
+    colors = {"success": GREEN, "info": TEAL, "warning": AMBER, "error": RED}
+    color = colors.get(kind, TEAL)
+    st.markdown(f"""
+    <div class="term-alert" style="--alert-color:{color}; color:{color};">
+        {message}
+    </div>
+    """, unsafe_allow_html=True)
+
+
+def sidebar_note(label: str, body: str):
+    st.markdown(f"""
+    <div class="sidebar-note">
+        <span class="lbl">▸ {label}</span>
+        <span class="body">{body}</span>
+    </div>
     """, unsafe_allow_html=True)
 
 

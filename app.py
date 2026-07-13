@@ -53,12 +53,15 @@ with st.sidebar:
     run_button = st.button("ANALYZE", type="primary", use_container_width=True)
 
     st.divider()
-    st.caption("Data source: Yahoo Finance via yfinance (free, no API key). "
-               "Cross-check promoter pledge/holding data with screener.in — "
-               "yfinance doesn't expose NSE promoter filings directly.")
+    S.sidebar_note(
+        "SOURCES",
+        "Yahoo Finance via yfinance (free, no API key). Cross-check promoter "
+        "pledge/holding data with screener.in — yfinance doesn't expose NSE "
+        "promoter filings directly."
+    )
 
 if not run_button and "last_ticker" not in st.session_state:
-    st.info("👈 Enter an NSE ticker in the sidebar and click **Analyze** to get started.")
+    S.styled_alert("👈 Enter an NSE ticker in the sidebar and click ANALYZE to get started.", kind="info")
     st.stop()
 
 if run_button:
@@ -73,11 +76,11 @@ with st.spinner(f"Fetching data for {norm_ticker}..."):
         fundamentals = get_fundamentals(ticker)
         hist = get_price_history(ticker, period=period)
     except Exception as e:
-        st.error(f"Couldn't fetch data for {norm_ticker}: {e}")
+        S.styled_alert(f"Couldn't fetch data for {norm_ticker}: {e}", kind="error")
         st.stop()
 
 if hist.empty:
-    st.warning(f"No price history found for {norm_ticker}. Check the ticker symbol.")
+    S.styled_alert(f"No price history found for {norm_ticker}. Check the ticker symbol.", kind="warning")
     st.stop()
 
 # ---------------- Ticker banner ----------------
@@ -119,7 +122,7 @@ S.render_flag_rows(red_flags)
 
 fails = count_fails(red_flags)
 if fails > 0:
-    st.warning(f"⚠️ {fails} red flag(s) failed. Review before considering this stock.")
+    S.styled_alert(f"⚠ {fails} red flag(s) failed. Review before considering this stock.", kind="warning")
 
 # ---------------- Peer comparison ----------------
 S.section_header("Peer Comparison", "Same sector · top by relevance")
@@ -157,7 +160,7 @@ if peer_list:
     peer_pe_values = peer_df[peer_df["Ticker"] != norm_ticker]["P/E"].dropna()
     peer_pe_median = peer_pe_values.median() if not peer_pe_values.empty else None
 else:
-    st.caption("No peer group configured for this sector yet — add peer tickers manually in the sidebar.")
+    st.markdown(f"<span style='color:{S.MUTED}; font-size:0.78rem;'>No peer group configured for this sector yet — add peer tickers manually in the sidebar.</span>", unsafe_allow_html=True)
     peer_pe_median = None
 
 # ---------------- Composite score ----------------
@@ -168,12 +171,12 @@ gauge_col, bars_col = st.columns([1, 1.6])
 with gauge_col:
     st.plotly_chart(S.score_gauge(score_result["final_score"]), use_container_width=True)
     if score_result["final_score"] >= 7:
-        st.success("Strong across weighted factors")
+        S.styled_alert("Strong across weighted factors", kind="success")
     elif score_result["final_score"] >= 4.5:
-        st.info("Mixed — some strengths, some concerns")
+        S.styled_alert("Mixed — some strengths, some concerns", kind="info")
     else:
-        st.error("Weak across weighted factors")
-    st.caption(f"Red flag penalty applied: −{score_result['red_flag_penalty']}")
+        S.styled_alert("Weak across weighted factors", kind="error")
+    st.markdown(f"<span style='color:{S.MUTED}; font-size:0.78rem;'>Red flag penalty applied: −{score_result['red_flag_penalty']}</span>", unsafe_allow_html=True)
 
 with bars_col:
     st.plotly_chart(
@@ -229,14 +232,15 @@ if gemini_configured():
                 # Parsing didn't find the expected markers — fall back to raw text
                 st.markdown(result["text"])
         else:
-            st.error(result["error"])
+            S.styled_alert(result["error"], kind="error")
 else:
-    st.info(
+    S.styled_alert(
         "Narrative generation is off. Set a free Gemini API key as the "
-        "`GEMINI_API_KEY` environment variable (local) or in the app's Secrets "
-        "panel (deployed) to enable this — get one at https://aistudio.google.com/apikey. "
-        "Until then, you can always paste this dashboard's numbers into a "
-        "Claude chat and ask for the bull/bear case manually — also free."
+        "GEMINI_API_KEY environment variable (local) or in the app's Secrets "
+        "panel (deployed) to enable this — get one at aistudio.google.com/apikey. "
+        "Until then, paste this dashboard's numbers into a Claude chat and ask "
+        "for the bull/bear case manually — also free.",
+        kind="info"
     )
 
 # ---------------- Log this analysis ----------------
@@ -254,7 +258,7 @@ with st.expander("📜 Analysis History (for this ticker)"):
     if not hist_df.empty:
         st.dataframe(hist_df, use_container_width=True, hide_index=True)
     else:
-        st.caption("No prior history yet — this is the first analysis logged.")
+        st.markdown(f"<span style='color:{S.MUTED}; font-size:0.78rem;'>No prior history yet — this is the first analysis logged.</span>", unsafe_allow_html=True)
 
 st.markdown(f"""
 <div style="color:{S.MUTED}; font-size:0.72rem; margin-top:24px; padding-top:12px; border-top:1px solid {S.BORDER};">
